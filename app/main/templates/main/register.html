@@ -1,0 +1,145 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head-scripts %}
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+{% endblock head-scripts %}
+
+{% block content %}
+<h1 class="text-center">Реєстрація на екзамен</h1>
+
+<div style="display: none;" id="exams-data">{{ data }}</div>
+
+<form class="mt-5 exams-form" action="{% url 'exams:register' %}" method="POST">
+
+  {% csrf_token %}
+
+  <div class="row">
+    <div class="col-6">
+      <h3 class="text-center">Дані вступника</h3>
+
+      {{ participant_form.non_field_errors }}
+
+      <div class="row">
+        <div class="col-4">
+          <label class="form-label" for="{{ participant_form.lastname.id_for_label }}">{{ participant_form.lastname.label }}</label>
+          {{ participant_form.lastname|add_class:"form-control" }}
+          <div class="invalid-feedback">{{ participant_form.lastname.errors }}</div>
+        </div>
+
+        <div class="col-4">
+          <label class="form-label" for="{{ participant_form.firstname.id_for_label }}">{{ participant_form.firstname.label }}</label>
+          {{ participant_form.firstname|add_class:"form-control" }}
+          <div class="invalid-feedback">{{ participant_form.firstname.errors }}</div>
+        </div>
+
+        <div class="col-4">
+          <label class="form-label" for="{{ participant_form.surname.id_for_label }}">{{ participant_form.surname.label }}</label>
+          {{ participant_form.surname|add_class:"form-control" }}
+          <div class="invalid-feedback">{{ participant_form.surname.errors }}</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label" for="{{ participant_form.email.id_for_label }}">{{ participant_form.email.label }}</label>
+        {{ participant_form.email|add_class:"form-control" }}
+        <div class="invalid-feedback">{{ participant_form.email.errors }}</div>
+      </div>
+
+      <div>
+        <label class="form-label" for="{{ participant_form.phone.id_for_label }}">{{ participant_form.phone.label }}</label>
+        {{ participant_form.phone|add_class:"form-control" }}
+        <div class="invalid-feedback">{{ participant_form.phone.errors }}</div>
+      </div>
+
+    </div>
+
+    <div class="col-6">
+      <h3 class="text-center">Дані вступу</h3>
+
+      <div class="base">
+        <label class="form-label" for="">База вступу</label>
+        <select
+          name="base"
+          class="form-select"
+          aria-label="Документ, на базі якого буде проводитись вступ"
+          v-model="baseId"
+          v-on:change="targetId = null; areaId = null;"
+        >
+          <option value="null" selected>Не обрано</option>
+          
+          <option v-for="degree in examsData" v-bind:value="degree.id">
+            {% verbatim %}
+              {{degree.name}}
+            {% endverbatim %}
+          </option>
+        </select>
+      </div>
+
+      <div class="target" v-if="isBaseSelected">
+        <label class="form-label" for="">Куди вступаєте</label>
+        <select
+          name="target"
+          class="form-select"
+          aria-label="Бажаний рівеень здобуття"
+          v-model="targetId"
+          v-on:change="areaId = null;"
+        >
+          <option value="null">Не обрано</option>
+
+          <option v-for="degree in availableTargets" v-bind:value="degree.id">
+            {% verbatim %}
+              {{ degree.name }}
+            {% endverbatim %}
+          </option>
+        </select>
+      </div>
+
+      <div class="specialities" v-if="isTargetSelected">
+        <label class="form-label" for="">Спеціальність для вступу</label>
+        <select
+          name="speciality"
+          class="form-select"
+          aria-label=""
+          v-model="areaId"
+        >
+          <option value="null">Не обрано</option>
+          
+          <option v-for="speciality in availableAreas" v-bind:value="speciality.id">
+            {% verbatim %}
+              {{ speciality.code }} {{ speciality.name }}
+            {% endverbatim %}
+          </option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+  <div class="exams row mt-5 justify-content-center" v-if="isAreaSelected">
+  
+    <div v-for="exam in availableExams" class="card col-3 mx-3">
+      {% verbatim %}
+        
+      <div class="card-header">
+       {{exam.type}}
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">{{ exam.subject }}</h5>
+        <p class="card-text">Дата: {{ exam.time }}</p>
+        <p class="card-text">Аудиторія: {{ exam.audience }} <br/> Корпус: {{ exam.building.name }}, {{ exam.building.address }}</p>
+      </div>
+      {% endverbatim %}
+  
+    </div>
+  
+  </div>
+  <button v-if="isAreaSelected" class="btn btn-success mt-3 d-block mx-auto" type="submit">Зареєструватись на екзамен(и)</button>
+</form>
+
+
+{% endblock content %}
+
+{% block scripts %}
+<script src="{% static 'js/register.js' %}"></script>
+{% endblock scripts %}
